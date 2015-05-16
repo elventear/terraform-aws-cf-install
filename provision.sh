@@ -32,6 +32,7 @@ CF_BOSHWORKSPACE_VERSION=${18}
 CF_SIZE=${19}
 DOCKER_SUBNET=${20}
 INSTALL_DOCKER=${21}
+APPFIRST_TENANT_ID=${22}
 
 boshDirectorHost="${IPMASK}.1.4"
 cfReleaseVersion="207"
@@ -166,11 +167,20 @@ if [[ ! "$?" == 0 ]]; then
 fi
 popd
 
+if [[ ! -d "$HOME/workspace/deployments/appfirst-boshrelease" ]]; then
+  git clone https://github.com/appfirst/boshrelease.git appfirst-boshrelease
+fi
+
+pushd appfirst-boshrelease
+MOST_RECENT_AF_RELEASE=$(find releases/appfirst -regex ".*appfirst-[0-9]*.yml" | sort | tail -n 1)
+bosh -n upload release --skip-if-exists $MOST_RECENT_AF_RELEASE
+popd
+
 # There is a specific branch of cf-boshworkspace that we use for terraform. This
 # may change in the future if we come up with a better way to handle maintaining
 # configs in a git repo
 if [[ ! -d "$HOME/workspace/deployments/cf-boshworkspace" ]]; then
-  git clone --branch  ${CF_BOSHWORKSPACE_VERSION} http://github.com/cloudfoundry-community/cf-boshworkspace
+  git clone --branch  ${CF_BOSHWORKSPACE_VERSION} https://github.com/elventear/cf-boshworkspace.git
 fi
 pushd cf-boshworkspace
 mkdir -p ssh
@@ -208,6 +218,7 @@ fi
   -e "s/IPMASK/${IPMASK}/g" \
   -e "s/CF_SG/${CF_SG}/g" \
   -e "s/LB_SUBNET1_AZ/${CF_SUBNET1_AZ}/g" \
+  -e "s/APPFIRST_TENANT_ID/${APPFIRST_TENANT_ID}/g" \
   deployments/cf-aws-${CF_SIZE}.yml
 
 

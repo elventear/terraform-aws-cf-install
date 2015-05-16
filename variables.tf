@@ -47,7 +47,7 @@ variable "cf_domain" {
 }
 
 variable "cf_boshworkspace_version" {
-  default = "v1.1.4"
+  default = "appfirst"
 }
 
 variable "cf_size" {
@@ -79,3 +79,6 @@ variable "aws_ubuntu_ami" {
         sa-east-1 = "ami-71d2676c"
     }
 }
+
+variable "appfirst_tenant_id" {}
+
