@@ -60,7 +60,7 @@ case "${release}" in
       libpq-dev libmysqlclient-dev libsqlite3-dev \
       g++ gcc make libc6-dev libreadline6-dev zlib1g-dev libssl-dev libyaml-dev \
       libsqlite3-dev sqlite3 autoconf libgdbm-dev libncurses5-dev automake \
-      libtool bison pkg-config libffi-dev cmake
+      libtool bison pkg-config libffi-dev cmake silversearcher-ag tmux htop iotop
     ;;
   (*Centos*|*RedHat*|*Amazon*)
     sudo yum update -y
