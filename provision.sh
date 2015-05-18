@@ -197,7 +197,7 @@ if [[ $CF_DOMAIN == "XIP" ]]; then
 fi
 
 if [[ ! -f "/usr/local/bin/spiff" ]]; then
-  curl -sOL https://github.com/cloudfoundry-incubator/spiff/releases/download/v1.0.3/spiff_linux_amd64.zip
+  curl -sOL https://github.com/cloudfoundry-incubator/spiff/releases/download/v1.0.6/spiff_linux_amd64.zip
   unzip spiff_linux_amd64.zip
   sudo mv ./spiff /usr/local/bin/spiff
   rm spiff_linux_amd64.zip
