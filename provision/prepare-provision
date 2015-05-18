@@ -56,3 +56,5 @@ assure_string_in_file $filename_provision 'CF_SIZE=${19}' "CF_SIZE=\"$(terraform
 assure_string_in_file $filename_provision 'DOCKER_SUBNET=${20}' "DOCKER_SUBNET=\"$(terraform output -state="${state_file}" docker_subnet)\""
 assure_string_in_file $filename_provision 'INSTALL_DOCKER=${21}' "INSTALL_DOCKER=\"$(terraform output -state="${state_file}" install_docker_services)\""
 assure_string_in_file $filename_provision 'APPFIRST_TENANT_ID=${22}' "APPFIRST_TENANT_ID=\"$(terraform output -state="${state_file}" appfirst_tenant_id)\""
+assure_string_in_file $filename_provision 'APPFIRST_FRONTEND_URL=${23}' "APPFIRST_FRONTEND_URL=\"$(terraform output -state="${state_file}" appfirst_frontend_url)\""
+assure_string_in_file $filename_provision 'APPFIRST_BACKEND_URL=${24}' "APPFIRST_BACKEND_URL=\"$(terraform output -state="${state_file}" appfirst_backend_url)\""

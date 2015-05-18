@@ -81,4 +81,10 @@ variable "aws_ubuntu_ami" {
 }
 
 variable "appfirst_tenant_id" {}
+variable "appfirst_frontend_url" {
+    default = "frontend.appfirst.com"
+}
+variable "appfirst_backend_url" {
+    default = "http://backend.appfirst.com/SaveData.py/save_data"
+}
 
