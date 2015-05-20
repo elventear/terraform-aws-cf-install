@@ -276,13 +276,18 @@ if [[ $INSTALL_DOCKER == "true" ]]; then
 
   cd ~/workspace/deployments
   if [[ ! -d "$HOME/workspace/deployments/docker-services-boshworkspace" ]]; then
-    git clone https://github.com/cloudfoundry-community/docker-services-boshworkspace.git
+    git clone --branch  ${CF_BOSHWORKSPACE_VERSION} https://github.com/elventear/docker-services-boshworkspace.git
   fi
 
   echo "Update the docker-aws-vpc.yml with cf-boshworkspace parameters"
   /home/ubuntu/workspace/deployments/docker-services-boshworkspace/shell/populate-docker-aws-vpc ${CF_SIZE}
   dockerDeploymentManifest="/home/ubuntu/workspace/deployments/docker-services-boshworkspace/deployments/docker-aws-vpc.yml"
-  /bin/sed -i "s/SUBNET_ID/${DOCKER_SUBNET}/g" "${dockerDeploymentManifest}"
+  /bin/sed -i \
+    -e "s/DIRECTOR_UUID/${DIRECTOR_UUID}/g" \
+    -e "s/APPFIRST_TENANT_ID/${APPFIRST_TENANT_ID}/g" \
+    -e "s/APPFIRST_FRONTEND_URL/${APPFIRST_FRONTEND_URL}/g" \
+    -e "s/APPFIRST_BACKEND_URL/${APPFIRST_BACKEND_URL}/g" \
+    -e "s/SUBNET_ID/${DOCKER_SUBNET}/g" "${dockerDeploymentManifest}"
 
   cd ~/workspace/deployments/docker-services-boshworkspace
   bundle install
