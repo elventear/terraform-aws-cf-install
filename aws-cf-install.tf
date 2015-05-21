@@ -177,3 +177,12 @@ output "install_docker_services" {
 output "appfirst_tenant_id" {
         value = "${var.appfirst_tenant_id}"
 }
+
+output "appfirst_frontend_url" {
+        value = "${var.appfirst_frontend_url}"
+}
+
+output "appfirst_backend_url" {
+        value = "${var.appfirst_backend_url}"
+}
+
