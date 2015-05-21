@@ -34,7 +34,6 @@ DOCKER_SUBNET=${20}
 INSTALL_DOCKER=${21}
 APPFIRST_TENANT_ID=${22}
 APPFIRST_FRONTEND_URL=${23}
-APPFIRST_BACKEND_URL=${24}
 
 boshDirectorHost="${IPMASK}.1.4"
 cfReleaseVersion="207"
@@ -222,7 +221,6 @@ fi
   -e "s/LB_SUBNET1_AZ/${CF_SUBNET1_AZ}/g" \
   -e "s/APPFIRST_TENANT_ID/${APPFIRST_TENANT_ID}/g" \
   -e "s/APPFIRST_FRONTEND_URL/${APPFIRST_FRONTEND_URL}/g" \
-  -e "s/APPFIRST_BACKEND_URL/${APPFIRST_BACKEND_URL}/g" \
   deployments/cf-aws-${CF_SIZE}.yml
 
 
@@ -286,7 +284,6 @@ if [[ $INSTALL_DOCKER == "true" ]]; then
     -e "s/DIRECTOR_UUID/${DIRECTOR_UUID}/g" \
     -e "s/APPFIRST_TENANT_ID/${APPFIRST_TENANT_ID}/g" \
     -e "s/APPFIRST_FRONTEND_URL/${APPFIRST_FRONTEND_URL}/g" \
-    -e "s/APPFIRST_BACKEND_URL/${APPFIRST_BACKEND_URL}/g" \
     -e "s/SUBNET_ID/${DOCKER_SUBNET}/g" "${dockerDeploymentManifest}"
 
   cd ~/workspace/deployments/docker-services-boshworkspace
