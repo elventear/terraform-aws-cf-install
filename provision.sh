@@ -177,6 +177,7 @@ mkdir -p ssh
 gem install bundler
 bundle install
 
+
 # Pull out the UUID of the director - bosh_cli needs it in the deployment to
 # know it's hitting the right microbosh instance
 DIRECTOR_UUID=$(bosh status --uuid)
@@ -210,6 +211,9 @@ fi
   -e "s/LB_SUBNET1_AZ/${CF_SUBNET1_AZ}/g" \
   deployments/cf-aws-${CF_SIZE}.yml
 
+curl -sOL https://www.dropbox.com/s/yfwa2cuimcn0mbh/bosh-stemcell-30000-aws-xen-ubuntu-trusty-go_agent.tgz
+bosh upload stemcell bosh-stemcell-30000-aws-xen-ubuntu-trusty-go_agent.tgz
+sed -i "/version: 2941/c\    version: 30000" $HOME/workspace/deployments/cf-boshworkspace/deployments/cf-aws-tiny.yml
 
 # Upload the bosh release, set the deployment, and execute
 deployedVersion=$(bosh releases | grep " ${cfReleaseVersion}" | awk '{print $4}')
