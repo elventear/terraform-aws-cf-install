@@ -170,7 +170,7 @@ popd
 # may change in the future if we come up with a better way to handle maintaining
 # configs in a git repo
 if [[ ! -d "$HOME/workspace/deployments/cf-boshworkspace" ]]; then
-  git clone --branch  ${CF_BOSHWORKSPACE_VERSION} http://github.com/cloudfoundry-community/cf-boshworkspace
+  git clone --branch  ${CF_BOSHWORKSPACE_VERSION} http://github.com/elventear/cf-boshworkspace
 fi
 pushd cf-boshworkspace
 mkdir -p ssh
@@ -212,8 +212,7 @@ fi
   deployments/cf-aws-${CF_SIZE}.yml
 
 curl -sOL https://www.dropbox.com/s/yfwa2cuimcn0mbh/bosh-stemcell-30000-aws-xen-ubuntu-trusty-go_agent.tgz
-bosh upload stemcell bosh-stemcell-30000-aws-xen-ubuntu-trusty-go_agent.tgz
-sed -i "/version: 2941/c\    version: 30000" $HOME/workspace/deployments/cf-boshworkspace/deployments/cf-aws-tiny.yml
+bosh upload stemcell bosh-stemcell-30000-aws-xen-ubuntu-trusty-go_agent.tgz || true
 
 # Upload the bosh release, set the deployment, and execute
 deployedVersion=$(bosh releases | grep " ${cfReleaseVersion}" | awk '{print $4}')
