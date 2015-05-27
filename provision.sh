@@ -53,9 +53,8 @@ release=$(cat /etc/*release | tr -d '\n')
 case "${release}" in
   (*Ubuntu*|*Debian*)
     sudo apt-get update -yq
-    sudo apt-get install -yq aptitude
-    sudo aptitude -yq install build-essential vim-nox git unzip tree \
-      libxslt-dev libxslt1.1 libxslt1-dev libxml2 libxml2-dev \
+    sudo apt-get install -yq aptitude build-essential vim-nox git unzip tree \
+       libxslt-dev libxslt1.1 libxslt1-dev libxml2 libxml2-dev \
       libpq-dev libmysqlclient-dev libsqlite3-dev \
       g++ gcc make libc6-dev libreadline6-dev zlib1g-dev libssl-dev libyaml-dev \
       libsqlite3-dev sqlite3 autoconf libgdbm-dev libncurses5-dev automake \
