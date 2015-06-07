@@ -173,3 +173,15 @@ output "docker_subnet" {
 output "install_docker_services" {
 	value = "${var.install_docker_services}"
 }
+
+output "appfirst_tenant_id" {
+        value = "${var.appfirst_tenant_id}"
+}
+
+output "appfirst_frontend_url" {
+        value = "${var.appfirst_frontend_url}"
+}
+
+output "appfirst_server_tags" {
+        value = "${var.appfirst_server_tags}"
+}

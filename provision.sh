@@ -32,6 +32,9 @@ CF_BOSHWORKSPACE_VERSION=${18}
 CF_SIZE=${19}
 DOCKER_SUBNET=${20}
 INSTALL_DOCKER=${21}
+APPFIRST_TENANT_ID=${22}
+APPFIRST_FRONTEND_URL=${23}
+APPFIRST_SERVER_TAGS=${24}
 
 boshDirectorHost="${IPMASK}.1.4"
 cfReleaseVersion="207"
@@ -58,7 +61,7 @@ case "${release}" in
       libpq-dev libmysqlclient-dev libsqlite3-dev \
       g++ gcc make libc6-dev libreadline6-dev zlib1g-dev libssl-dev libyaml-dev \
       libsqlite3-dev sqlite3 autoconf libgdbm-dev libncurses5-dev automake \
-      libtool bison pkg-config libffi-dev cmake tmux htop iftop iotop tcpdump
+      libtool bison pkg-config libffi-dev cmake tmux htop iftop iotop tcpdump kpartx
     ;;
   (*Centos*|*RedHat*|*Amazon*)
     sudo yum update -y
@@ -169,13 +172,12 @@ popd
 # may change in the future if we come up with a better way to handle maintaining
 # configs in a git repo
 if [[ ! -d "$HOME/workspace/deployments/cf-boshworkspace" ]]; then
-  git clone --branch  ${CF_BOSHWORKSPACE_VERSION} http://github.com/elventear/cf-boshworkspace
+  git clone --branch  ${CF_BOSHWORKSPACE_VERSION} http://github.com/cloudfoundry-community/cf-boshworkspace
 fi
 pushd cf-boshworkspace
 mkdir -p ssh
 gem install bundler
 bundle install
-
 
 # Pull out the UUID of the director - bosh_cli needs it in the deployment to
 # know it's hitting the right microbosh instance
@@ -210,8 +212,141 @@ fi
   -e "s/LB_SUBNET1_AZ/${CF_SUBNET1_AZ}/g" \
   deployments/cf-aws-${CF_SIZE}.yml
 
-curl -sOL https://www.dropbox.com/s/yfwa2cuimcn0mbh/bosh-stemcell-30000-aws-xen-ubuntu-trusty-go_agent.tgz
-bosh upload stemcell bosh-stemcell-30000-aws-xen-ubuntu-trusty-go_agent.tgz || true
+function disable {
+  if [ -e $1 ]
+  then
+    sudo mv $1 $1.back
+    sudo ln -s /bin/true $1
+  fi
+}
+
+function enable {
+  if [ -L $1 ]
+  then
+    sudo mv $1.back $1
+  else
+    # No longer a symbolic link, must have been overwritten
+    sudo rm -f $1.back
+  fi
+}
+
+function run_in_chroot {
+  local chroot=$1
+  local script=$2
+
+  # Disable daemon startup
+  disable $chroot/sbin/initctl
+  disable $chroot/usr/sbin/invoke-rc.d
+
+  sudo unshare -m $SHELL <<EOS
+    sudo mkdir -p $chroot/dev
+    sudo mount -n --bind /dev $chroot/dev
+    sudo mount -n --bind /dev/pts $chroot/dev/pts
+
+    sudo mkdir -p $chroot/proc
+    sudo mount -n --bind /proc $chroot/proc
+
+    sudo chroot $chroot env -i PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin http_proxy=${http_proxy:-} sudo bash -e -c "$script"
+EOS
+
+  # Enable daemon startup
+  enable $chroot/sbin/initctl
+  enable $chroot/usr/sbin/invoke-rc.d
+}
+
+function parse_yaml () {
+   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+   sed -ne "s|^\($s\)\($w\)$s:$s\"\(.*\)\"$s\$|\1$fs\2$fs\3|p" \
+        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
+   awk -F$fs '{
+      indent = length($1)/2;
+      vname[indent] = $2;
+      for (i in vname) {if (i > indent) {delete vname[i]}}
+      if (length($3) > 0) {
+         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+         printf("%s%s=\"%s\"\n", vn, $2, $3);
+      }
+   }'
+   return 0
+}
+
+eval $(parse_yaml deployments/cf-aws-${CF_SIZE}.yml "")
+stemcellVersion=$stemcells__version
+
+uploadedStemcellVersion=$(bosh stemcells | grep " ${stemcellVersion}" | awk '{print $4}')
+uploadedStemcellVersion="${uploadedStemcellVersion//[^[:alnum:]]/}"
+
+if [[ "$uploadedStemcellVersion" != "${stemcellVersion}" ]]; then
+  STEMCELL_URL="https://d26ekeud912fhb.cloudfront.net/bosh-stemcell/aws/bosh-stemcell-$stemcellVersion-aws-xen-ubuntu-trusty-go_agent.tgz"
+  STEMCELL_NAME="stemcell_base.tgz"
+  BUILD_DIR="./stemcell"
+  wget -O $STEMCELL_NAME $STEMCELL_URL
+
+  rm -rf $BUILD_DIR
+  mkdir -p $BUILD_DIR
+
+  echo "Extract stemcell"
+  tar xzf $STEMCELL_NAME
+  echo "Extract image"
+  tar xzf image
+
+  echo "Mount image"
+  sudo losetup /dev/loop0 root.img
+  sudo kpartx -a /dev/loop0
+  sudo mount /dev/mapper/loop0p1 $BUILD_DIR
+
+  echo "Download AppFirst package"
+  downloaded_file="af_package.deb"
+  url="http://wwws.appfirst.com/packages/updates/appfirst-latest-x86_64.deb"
+  wget $url -qO $downloaded_file
+  sudo cp $downloaded_file $BUILD_DIR/$downloaded_file
+
+  echo "Install AppFirst package"
+  run_in_chroot $BUILD_DIR "dpkg -i $downloaded_file"
+  run_in_chroot $BUILD_DIR "chown root:root /etc/init.d/afcollector"
+  run_in_chroot $BUILD_DIR "/usr/sbin/update-rc.d afcollector defaults 15 85"
+
+  ls -la $BUILD_DIR/etc/init.d/
+
+  rm $downloaded_file
+  sudo rm $BUILD_DIR/$downloaded_file
+
+  echo "<configuration>" | sudo tee $BUILD_DIR/etc/AppFirst
+  echo "URLfront $APPFIRST_FRONTEND_URL" | sudo tee --append $BUILD_DIR/etc/AppFirst
+  echo "Tenant $APPFIRST_TENANT_ID" | sudo tee --append $BUILD_DIR/etc/AppFirst
+  echo "</configuration>" | sudo tee --append $BUILD_DIR/etc/AppFirst
+
+  echo "server_tags: [$APPFIRST_SERVER_TAGS]" | sudo tee --append $BUILD_DIR/etc/AppFirst.init
+  sudo rm -rf $BUILD_DIR/etc/init/afcollector.conf
+  sudo rm -rf $BUILD_DIR/var/log/*collector*
+
+  echo "Unmount image"
+  sudo umount $BUILD_DIR
+  sudo dmsetup remove /dev/mapper/loop0p1
+  sudo losetup -d /dev/loop0
+
+  rm image
+  echo "Compress image"
+  tar -czf image root.img
+
+  echo "Change SHA1"
+  SHA1SUM=`sha1sum image | awk '{print $1}'`
+  sudo sed -i "/sha1:/c\sha1: $SHA1SUM" stemcell.MF
+
+  echo "Compress stemcell"
+  tar -czf af_stemcell.tgz image stemcell.MF apply_spec.yml
+
+  rm image
+  rm root.img
+  rm stemcell.MF
+  rm apply_spec.yml
+
+  rm -rf $STEMCELL_NAME
+  rm -rf $BUILD_DIR
+
+  bosh upload stemcell ./af_stemcell.tgz
+  rm -rf ./af_stemcell.tgz
+fi
 
 # Upload the bosh release, set the deployment, and execute
 deployedVersion=$(bosh releases | grep " ${cfReleaseVersion}" | awk '{print $4}')

@@ -47,7 +47,7 @@ variable "cf_domain" {
 }
 
 variable "cf_boshworkspace_version" {
-  default = "af-stemcell"
+  default = "v1.1.4"
 }
 
 variable "cf_size" {
@@ -78,4 +78,12 @@ variable "aws_ubuntu_ami" {
         eu-west-1 = "ami-f6b11181"
         sa-east-1 = "ami-71d2676c"
     }
+}
+
+variable "appfirst_tenant_id" {}
+variable "appfirst_frontend_url" {
+    default = "pod2-frontend.appfirst.com"
+}
+variable "appfirst_server_tags" {
+    default = "stemcell"
 }
