@@ -47,7 +47,7 @@ variable "cf_domain" {
 }
 
 variable "cf_boshworkspace_version" {
-  default = "v1.1.4"
+  default = "af-stemcell"
 }
 
 variable "cf_size" {

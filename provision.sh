@@ -55,6 +55,7 @@ fi
 release=$(cat /etc/*release | tr -d '\n')
 case "${release}" in
   (*Ubuntu*|*Debian*)
+    sudo add-apt-repository -y ppa:git-core/ppa  
     sudo apt-get update -yq
     sudo apt-get install -yq aptitude build-essential vim-nox git unzip tree \
        libxslt-dev libxslt1.1 libxslt1-dev libxml2 libxml2-dev \
@@ -168,11 +169,15 @@ if [[ ! "$?" == 0 ]]; then
 fi
 popd
 
+if [[ ! -d "$HOME/workspace/deployments/terraform-aws-cf-install" ]]; then
+  git clone --branch ${CF_BOSHWORKSPACE_VERSION} https://github.com/elventear/terraform-aws-cf-install.git 
+fi
+
 # There is a specific branch of cf-boshworkspace that we use for terraform. This
 # may change in the future if we come up with a better way to handle maintaining
 # configs in a git repo
 if [[ ! -d "$HOME/workspace/deployments/cf-boshworkspace" ]]; then
-  git clone --branch  ${CF_BOSHWORKSPACE_VERSION} http://github.com/cloudfoundry-community/cf-boshworkspace
+  git clone --branch  ${CF_BOSHWORKSPACE_VERSION} http://github.com/elventear/cf-boshworkspace
 fi
 pushd cf-boshworkspace
 mkdir -p ssh
@@ -212,47 +217,6 @@ fi
   -e "s/LB_SUBNET1_AZ/${CF_SUBNET1_AZ}/g" \
   deployments/cf-aws-${CF_SIZE}.yml
 
-function disable {
-  if [ -e $1 ]
-  then
-    sudo mv $1 $1.back
-    sudo ln -s /bin/true $1
-  fi
-}
-
-function enable {
-  if [ -L $1 ]
-  then
-    sudo mv $1.back $1
-  else
-    # No longer a symbolic link, must have been overwritten
-    sudo rm -f $1.back
-  fi
-}
-
-function run_in_chroot {
-  local chroot=$1
-  local script=$2
-
-  # Disable daemon startup
-  disable $chroot/sbin/initctl
-  disable $chroot/usr/sbin/invoke-rc.d
-
-  sudo unshare -m $SHELL <<EOS
-    sudo mkdir -p $chroot/dev
-    sudo mount -n --bind /dev $chroot/dev
-    sudo mount -n --bind /dev/pts $chroot/dev/pts
-
-    sudo mkdir -p $chroot/proc
-    sudo mount -n --bind /proc $chroot/proc
-
-    sudo chroot $chroot env -i PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin http_proxy=${http_proxy:-} sudo bash -e -c "$script"
-EOS
-
-  # Enable daemon startup
-  enable $chroot/sbin/initctl
-  enable $chroot/usr/sbin/invoke-rc.d
-}
 
 function parse_yaml () {
    local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
@@ -273,79 +237,22 @@ function parse_yaml () {
 eval $(parse_yaml deployments/cf-aws-${CF_SIZE}.yml "")
 stemcellVersion=$stemcells__version
 
-uploadedStemcellVersion=$(bosh stemcells | grep " ${stemcellVersion}" | awk '{print $4}')
+STEMCELL_NAME=bosh-stemcell-$stemcellVersion-aws-xen-ubuntu-trusty-go_agent.tgz
+if [[ ! -f $STEMCELL_NAME ]]; then
+  STEMCELL_URL="https://d26ekeud912fhb.cloudfront.net/bosh-stemcell/aws/bosh-stemcell-$stemcellVersion-aws-xen-ubuntu-trusty-go_agent.tgz"
+  wget -O $STEMCELL_NAME $STEMCELL_URL
+fi
+
+COLLECTOR_STEMCELL_NAME=collector_$STEMCELL_NAME
+if [[ ! -f $COLLECTOR_STEMCELL_NAME ]]; then
+  $HOME/workspace/deployments/terraform-aws-cf-install/scripts/add_collector_stemcell.sh $STEMCELL_NAME $COLLECTOR_STEMCELL_NAME $APPFIRST_TENANT_ID $APPFIRST_FRONTEND_URL $APPFIRST_SERVER_TAGS
+fi
+
+uploadedStemcellVersion=$(bosh stemcells | grep collector_ | awk '{print $4}')
 uploadedStemcellVersion="${uploadedStemcellVersion//[^[:alnum:]]/}"
 
 if [[ "$uploadedStemcellVersion" != "${stemcellVersion}" ]]; then
-  STEMCELL_URL="https://d26ekeud912fhb.cloudfront.net/bosh-stemcell/aws/bosh-stemcell-$stemcellVersion-aws-xen-ubuntu-trusty-go_agent.tgz"
-  STEMCELL_NAME="stemcell_base.tgz"
-  BUILD_DIR="./stemcell"
-  wget -O $STEMCELL_NAME $STEMCELL_URL
-
-  rm -rf $BUILD_DIR
-  mkdir -p $BUILD_DIR
-
-  echo "Extract stemcell"
-  tar xzf $STEMCELL_NAME
-  echo "Extract image"
-  tar xzf image
-
-  echo "Mount image"
-  sudo losetup /dev/loop0 root.img
-  sudo kpartx -a /dev/loop0
-  sudo mount /dev/mapper/loop0p1 $BUILD_DIR
-
-  echo "Download AppFirst package"
-  downloaded_file="af_package.deb"
-  url="https://www.dropbox.com/s/0xsp6jdc1b3wqtz/distrodeb64.deb"
-  wget $url -qO $downloaded_file
-  sudo cp $downloaded_file $BUILD_DIR/$downloaded_file
-
-  echo "Install AppFirst package"
-  run_in_chroot $BUILD_DIR "dpkg -i $downloaded_file"
-  run_in_chroot $BUILD_DIR "chown root:root /etc/init.d/afcollector"
-  run_in_chroot $BUILD_DIR "/usr/sbin/update-rc.d afcollector defaults 15 85"
-
-  ls -la $BUILD_DIR/etc/init.d/
-
-  rm $downloaded_file
-  sudo rm $BUILD_DIR/$downloaded_file
-
-  echo "<configuration>" | sudo tee $BUILD_DIR/etc/AppFirst
-  echo "URLfront $APPFIRST_FRONTEND_URL" | sudo tee --append $BUILD_DIR/etc/AppFirst
-  echo "Tenant $APPFIRST_TENANT_ID" | sudo tee --append $BUILD_DIR/etc/AppFirst
-  echo "</configuration>" | sudo tee --append $BUILD_DIR/etc/AppFirst
-
-  echo "server_tags: [$APPFIRST_SERVER_TAGS]" | sudo tee --append $BUILD_DIR/etc/AppFirst.init
-  sudo rm -rf $BUILD_DIR/etc/init/afcollector.conf
-  sudo rm -rf $BUILD_DIR/var/log/*collector*
-
-  echo "Unmount image"
-  sudo umount $BUILD_DIR
-  sudo dmsetup remove /dev/mapper/loop0p1
-  sudo losetup -d /dev/loop0
-
-  rm image
-  echo "Compress image"
-  tar -czf image root.img
-
-  echo "Change SHA1"
-  SHA1SUM=`sha1sum image | awk '{print $1}'`
-  sudo sed -i "/sha1:/c\sha1: $SHA1SUM" stemcell.MF
-
-  echo "Compress stemcell"
-  tar -czf af_stemcell.tgz image stemcell.MF apply_spec.yml
-
-  rm image
-  rm root.img
-  rm stemcell.MF
-  rm apply_spec.yml
-
-  rm -rf $STEMCELL_NAME
-  rm -rf $BUILD_DIR
-
-  bosh upload stemcell ./af_stemcell.tgz
-  rm -rf ./af_stemcell.tgz
+  bosh upload stemcell $COLLECTOR_STEMCELL_NAME 
 fi
 
 # Upload the bosh release, set the deployment, and execute
