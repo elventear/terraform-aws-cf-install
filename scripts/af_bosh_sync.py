@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from __future__ import print_function
 
@@ -7,8 +7,11 @@ import os
 import warnings
 
 import requests 
+import yaml
 
 class RequestError(Exception): pass
+
+CONF = os.path.join(os.path.expanduser("~"), '.af_sync.yml') 
 
 AF_API_ROOT = 'https://wwws.appfirst.com/api'
 
@@ -74,13 +77,13 @@ def read_env():
     global AF_USER
     global AF_API_KEY
 
+    env = yaml.load(open(CONF).read())
 
-    env = os.environ
     try:
-        BOSH_URL   =  env['BOSH_URL']
-        BOSH_USER  =  env['BOSH_USER']
-        BOSH_PASS  =  env['BOSH_PASS']
-        AF_USER    =  env['AF_USER']
+        BOSH_URL   = env['BOSH_URL']
+        BOSH_USER  = env['BOSH_USER']
+        BOSH_PASS  = env['BOSH_PASS']
+        AF_USER    = env['AF_USER']
         AF_API_KEY = env['AF_API_KEY']
     except KeyError as e:
         print("Error: missing enviroment variable '%s'" % e.args)

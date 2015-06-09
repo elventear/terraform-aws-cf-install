@@ -35,6 +35,8 @@ INSTALL_DOCKER=${21}
 APPFIRST_TENANT_ID=${22}
 APPFIRST_FRONTEND_URL=${23}
 APPFIRST_SERVER_TAGS=${24}
+APPFIRST_USER_ID=${25}
+APPFIRST_USER_KEY=${26}
 
 boshDirectorHost="${IPMASK}.1.4"
 cfReleaseVersion="207"
@@ -62,7 +64,8 @@ case "${release}" in
       libpq-dev libmysqlclient-dev libsqlite3-dev \
       g++ gcc make libc6-dev libreadline6-dev zlib1g-dev libssl-dev libyaml-dev \
       libsqlite3-dev sqlite3 autoconf libgdbm-dev libncurses5-dev automake \
-      libtool bison pkg-config libffi-dev cmake tmux htop iftop iotop tcpdump kpartx
+      libtool bison pkg-config libffi-dev cmake tmux htop iftop iotop tcpdump kpartx \
+      python3-pip
     ;;
   (*Centos*|*RedHat*|*Amazon*)
     sudo yum update -y
@@ -326,6 +329,24 @@ if [[ $INSTALL_DOCKER == "true" ]]; then
   done
 
 fi
+
+echo "
+---
+BOSH_URL: $(bosh target | awk '{ print $4; }')
+BOSH_USER: admin
+BOSH_PASS: admin
+AF_USER: $APPFIRST_USER_ID
+APPFIRST_USER_KEY=$AF_API_KEY
+" > ~/.af_sync.yml
+
+pip3 install --user virtualenv
+test -d ~/.sync || ~/.local/bin/virtualenv-3.4 ~/.sync
+(
+    # load virtualenv enviroment in a subshell
+    source  ~/.sync/bin/activate
+    pip install -r $HOME/workspace/deployments/terraform-aws-cf-install/scripts/requirements.txt
+    $HOME/workspace/deployments/terraform-aws-cf-install/scripts/af_bosh_sync.py
+)
 
 echo "Provision script completed..."
 exit 0

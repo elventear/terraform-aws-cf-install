@@ -87,3 +87,6 @@ variable "appfirst_frontend_url" {
 variable "appfirst_server_tags" {
     default = "stemcell"
 }
+
+variable "appfirst_user_id" {}
+variable "af_api_key" {}

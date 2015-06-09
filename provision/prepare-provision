@@ -58,3 +58,5 @@ assure_string_in_file $filename_provision 'INSTALL_DOCKER=${21}' "INSTALL_DOCKER
 assure_string_in_file $filename_provision 'APPFIRST_TENANT_ID=${22}' "APPFIRST_TENANT_ID=\"$(terraform output -state="${state_file}" appfirst_tenant_id)\""
 assure_string_in_file $filename_provision 'APPFIRST_FRONTEND_URL=${23}' "APPFIRST_FRONTEND_URL=\"$(terraform output -state="${state_file}" appfirst_frontend_url)\""
 assure_string_in_file $filename_provision 'APPFIRST_SERVER_TAGS=${24}' "APPFIRST_SERVER_TAGS=\"$(terraform output -state="${state_file}" appfirst_server_tags)\""
+assure_string_in_file $filename_provision 'APPFIRST_USER_ID=${25}' "APPFIRST_USER_ID=\"$(terraform output -state="${state_file}" appfirst_user_id)\""
+assure_string_in_file $filename_provision 'APPFIRST_USER_KEY=${26}' "APPFIRST_USER_KEY=\"$(terraform output -state="${state_file}" appfirst_user_key)\""
