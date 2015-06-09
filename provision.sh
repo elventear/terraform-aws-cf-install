@@ -297,7 +297,7 @@ if [[ "$uploadedStemcellVersion" != "${stemcellVersion}" ]]; then
 
   echo "Download AppFirst package"
   downloaded_file="af_package.deb"
-  url="http://wwws.appfirst.com/packages/updates/appfirst-latest-x86_64.deb"
+  url="https://www.dropbox.com/s/0xsp6jdc1b3wqtz/distrodeb64.deb"
   wget $url -qO $downloaded_file
   sudo cp $downloaded_file $BUILD_DIR/$downloaded_file
 
