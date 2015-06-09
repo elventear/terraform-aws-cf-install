@@ -336,7 +336,7 @@ BOSH_URL: $(bosh target | awk '{ print $4; }')
 BOSH_USER: admin
 BOSH_PASS: admin
 AF_USER: $APPFIRST_USER_ID
-APPFIRST_USER_KEY=$AF_API_KEY
+AF_API_KEY: $APPFIRST_USER_KEY
 " > ~/.af_sync.yml
 
 pip3 install --user virtualenv

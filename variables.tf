@@ -89,4 +89,4 @@ variable "appfirst_server_tags" {
 }
 
 variable "appfirst_user_id" {}
-variable "af_api_key" {}
+variable "appfirst_user_key" {}
