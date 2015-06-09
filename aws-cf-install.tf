@@ -178,6 +178,14 @@ output "appfirst_tenant_id" {
         value = "${var.appfirst_tenant_id}"
 }
 
+output "appfirst_server_tags" {
+        value = "${var.appfirst_server_tags}"
+}
+
+output "appfirst_frontend_url" {
+        value = "${var.appfirst_frontend_url}"
+}
+
 output "appfirst_user_id" {
         value = "${var.appfirst_user_id}"
 }
