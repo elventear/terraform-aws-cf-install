@@ -61,7 +61,7 @@ EOS
 }
 
 function print_usage {
-    test -z $1 || echo ERROR: $1
+    test -z "$1" || echo "ERROR: $1"
     echo USAGE:
     echo "$SCRIPTNAME <stemcell_path> <new_stemcell_path> <tenant_id> <fe_url> <server_tag>"
 }
@@ -82,6 +82,11 @@ test -z $APPFIRST_TENANT_ID && { print_usage "missing output stemcell filename";
 test -z $APPFIRST_FRONTEND_URL && { print_usage "missing output stemcell filename"; exit 1; }
 test -z $APPFIRST_SERVER_TAGS && { print_usage "missing server_tags"; exit 1; }
 test -f $STEMCELL || { print_usage "$STEMCELL not found"; exit 2; }
+
+if [[ "$STEMCELL" != /* ]]; then
+    # Relative path
+    STEMCELL=$(pwd)/$STEMCELL
+fi
 
 BUILD_DIR=$(mktemp -d -t stemcellXXXXXXXXX)
 

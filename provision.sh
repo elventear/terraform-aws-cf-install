@@ -237,15 +237,17 @@ function parse_yaml () {
 eval $(parse_yaml deployments/cf-aws-${CF_SIZE}.yml "")
 stemcellVersion=$stemcells__version
 
+# See:
+# http://bosh_artifacts.cfapps.io/file_collections?type=stemcells
 STEMCELL_NAME=bosh-stemcell-$stemcellVersion-aws-xen-ubuntu-trusty-go_agent.tgz
 if [[ ! -f $STEMCELL_NAME ]]; then
-  STEMCELL_URL="https://d26ekeud912fhb.cloudfront.net/bosh-stemcell/aws/bosh-stemcell-$stemcellVersion-aws-xen-ubuntu-trusty-go_agent.tgz"
+  STEMCELL_URL="https://s3.amazonaws.com/bosh-jenkins-artifacts/bosh-stemcell/aws/bosh-stemcell-$stemcellVersion-aws-xen-ubuntu-trusty-go_agent.tgz"
   wget -O $STEMCELL_NAME $STEMCELL_URL
 fi
 
 COLLECTOR_STEMCELL_NAME=collector_$STEMCELL_NAME
 if [[ ! -f $COLLECTOR_STEMCELL_NAME ]]; then
-  $HOME/workspace/deployments/terraform-aws-cf-install/scripts/add_collector_stemcell.sh $STEMCELL_NAME $COLLECTOR_STEMCELL_NAME $APPFIRST_TENANT_ID $APPFIRST_FRONTEND_URL $APPFIRST_SERVER_TAGS
+    sudo $HOME/workspace/deployments/terraform-aws-cf-install/scripts/add_collector_stemcell.sh $STEMCELL_NAME $COLLECTOR_STEMCELL_NAME $APPFIRST_TENANT_ID $APPFIRST_FRONTEND_URL $APPFIRST_SERVER_TAGS
 fi
 
 uploadedStemcellVersion=$(bosh stemcells | grep collector_ | awk '{print $4}')
