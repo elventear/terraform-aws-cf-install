@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo Provisioning start $(date)
+
 # fail immediately on error
 set -e -x
 

@@ -31,7 +31,8 @@ ssh -t -t -i ${keyPath} ubuntu@$bastionIP "
 chmod +x $targetPath
 
 if tmux new-session -d -s cf_provision; then 
-  tmux send-keys -t cf_provision:0 "$targetPath" C-m
+  tmux send-keys -t cf_provision:0 "$targetPath "
+  tmux send-keys -t cf_provision:0 ' 2>&1 | tee --append provision.log' C-m
 fi
 
 tmux select-window -t cf_provision:0
