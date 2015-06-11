@@ -5,6 +5,7 @@ from __future__ import print_function
 import sys
 import os
 import warnings
+import functools
 
 import requests 
 import yaml
@@ -38,12 +39,17 @@ def get_tagged_server_ids(tag):
 def get_bosh_releases_with_collector():
     r = check_200(requests.get(bosh_api('deployments'), auth=(BOSH_USER, BOSH_PASS),
         verify=False))
-    o = []
+    o = set()
     for deployment in r.json():
-        if 'appfirst' in set(x['name'] for x in deployment['releases']) or \
-                'collector' in set(x['name'] for x in deployment['stemcells']):
-            o.append(deployment['name'])
-    return o
+        if 'appfirst' in set(x['name'] for x in deployment['releases']):
+            o.add(deployment['name'])
+            continue
+        for stemcell in set(x['name'] for x in deployment['stemcells']):
+            if stemcell.startswith('collector'):
+                o.add(deployment['name'])
+                break
+
+    return list(o)
 
 def get_bosh_vm_agent_ids(releases):
     o = {}
