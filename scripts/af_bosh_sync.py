@@ -41,7 +41,7 @@ def get_bosh_releases_with_collector():
     o = []
     for deployment in r.json():
         if 'appfirst' in set(x['name'] for x in deployment['releases']) or \
-                'appfirst' in set(x['name'] for x in deployment['stemcells']):
+                'collector' in set(x['name'] for x in deployment['stemcells']):
             o.append(deployment['name'])
     return o
 
@@ -92,7 +92,7 @@ def read_env():
 def main():
     read_env()
     to_tag_hosts = get_bosh_vm_agent_ids(get_bosh_releases_with_collector())
-    bosh_server_ids = get_tagged_server_ids('bosh')
+    bosh_server_ids = get_tagged_server_ids('stemcell')
     for server_id in bosh_server_ids:
         update_nickname(server_id, to_tag_hosts)
 
