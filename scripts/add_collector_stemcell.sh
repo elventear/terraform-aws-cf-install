@@ -109,7 +109,7 @@ mount /dev/mapper/loop0p1 $MNT_STEM
 
 echo "Download AppFirst package"
 downloaded_file="af_package.deb"
-url="https://www.dropbox.com/s/0xsp6jdc1b3wqtz/distrodeb64.deb"
+url="https://www.dropbox.com/s/6xnf7v0wscc1v5t/new.distrodeb64.deb"
 wget $url -qO $MNT_STEM/$downloaded_file
 
 echo "Install AppFirst package"
