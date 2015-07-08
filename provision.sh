@@ -360,126 +360,131 @@ TOKEN=`cat $CF_DEPLOY_FILE | grep -w secret: | awk 'NR==1{print $2}'`
 rm $NATS_CFG
 rm $TMP_YML
 
-echo "---" > $MANIFEST_FILE
-echo "name: cf-services-contrib" >> $MANIFEST_FILE
-echo "director_uuid: $DIRECTOR_UUID" >> $MANIFEST_FILE
-echo "" >> $MANIFEST_FILE
-echo "releases:" >> $MANIFEST_FILE
-echo "  - name: cf-services-contrib" >> $MANIFEST_FILE
-echo "    version: 6" >> $MANIFEST_FILE
-echo "" >> $MANIFEST_FILE
-echo "compilation:" >> $MANIFEST_FILE
-echo "  workers: 3" >> $MANIFEST_FILE
-echo "  network: default" >> $MANIFEST_FILE
-echo "  reuse_compilation_vms: true" >> $MANIFEST_FILE
-echo "  cloud_properties:" >> $MANIFEST_FILE
-echo "    instance_type: m3.medium" >> $MANIFEST_FILE
-echo "" >> $MANIFEST_FILE
-echo "update:" >> $MANIFEST_FILE
-echo "  canaries: 1" >> $MANIFEST_FILE
-echo "  canary_watch_time: 30000-60000" >> $MANIFEST_FILE
-echo "  update_watch_time: 30000-60000" >> $MANIFEST_FILE
-echo "  max_in_flight: 4" >> $MANIFEST_FILE
-echo "" >> $MANIFEST_FILE
-echo "networks:" >> $MANIFEST_FILE
-echo "  - name: floating" >> $MANIFEST_FILE
-echo "    type: vip" >> $MANIFEST_FILE
-echo "    cloud_properties: {}" >> $MANIFEST_FILE
-echo "  - name: default" >> $MANIFEST_FILE
-echo "    type: dynamic" >> $MANIFEST_FILE
-echo "    cloud_properties:" >> $MANIFEST_FILE
-echo "      security_groups:" >> $MANIFEST_FILE
-echo "        - $CF_SG" >> $MANIFEST_FILE
-echo "      subnet: $CF_SUBNET1" >> $MANIFEST_FILE
-echo "" >> $MANIFEST_FILE
-echo "resource_pools:" >> $MANIFEST_FILE
-echo "  - name: common" >> $MANIFEST_FILE
-echo "    network: default" >> $MANIFEST_FILE
-echo "    size: 2" >> $MANIFEST_FILE
-echo "    stemcell:" >> $MANIFEST_FILE
-echo "      name: collector_bosh-aws-xen-ubuntu-trusty-go_agent" >> $MANIFEST_FILE
-echo "      version: latest" >> $MANIFEST_FILE
-echo "    cloud_properties:" >> $MANIFEST_FILE
-echo "      instance_type: m3.medium" >> $MANIFEST_FILE
-echo "" >> $MANIFEST_FILE
-echo "jobs:" >> $MANIFEST_FILE
-echo "  - name: gateways" >> $MANIFEST_FILE
-echo "    release: cf-services-contrib" >> $MANIFEST_FILE
-echo "    template:" >> $MANIFEST_FILE
-echo "    - postgresql_gateway_ng" >> $MANIFEST_FILE
-echo "    instances: 1" >> $MANIFEST_FILE
-echo "    resource_pool: common" >> $MANIFEST_FILE
-echo "    persistent_disk: 10000" >> $MANIFEST_FILE
-echo "    networks:" >> $MANIFEST_FILE
-echo "      - name: default" >> $MANIFEST_FILE
-echo "        default: [dns, gateway]" >> $MANIFEST_FILE
-echo "    properties:" >> $MANIFEST_FILE
-echo "      uaa_client_id: \"cf\"" >> $MANIFEST_FILE
-echo "      uaa_endpoint: https://uaa.run.$CF_IP.xip.io" >> $MANIFEST_FILE
-echo "      uaa_client_auth_credentials:" >> $MANIFEST_FILE
-echo "        username: admin" >> $MANIFEST_FILE
-echo "        password: $CF_ADMIN_PASS" >> $MANIFEST_FILE
-echo "" >> $MANIFEST_FILE
-echo "  - name: postgresql_service_node" >> $MANIFEST_FILE
-echo "    release: cf-services-contrib" >> $MANIFEST_FILE
-echo "    template: postgresql_node_ng" >> $MANIFEST_FILE
-echo "    instances: 1" >> $MANIFEST_FILE
-echo "    resource_pool: common" >> $MANIFEST_FILE
-echo "    persistent_disk: 10000" >> $MANIFEST_FILE
-echo "    properties:" >> $MANIFEST_FILE
-echo "      postgresql_node:" >> $MANIFEST_FILE
-echo "        plan: default" >> $MANIFEST_FILE
-echo "    networks:" >> $MANIFEST_FILE
-echo "      - name: default" >> $MANIFEST_FILE
-echo "        default: [dns, gateway]" >> $MANIFEST_FILE
-echo "" >> $MANIFEST_FILE
-echo "" >> $MANIFEST_FILE
-echo "properties:" >> $MANIFEST_FILE
-echo "  networks:" >> $MANIFEST_FILE
-echo "    apps: default" >> $MANIFEST_FILE
-echo "    management: default" >> $MANIFEST_FILE
-echo "" >> $MANIFEST_FILE
-echo "  cc:" >> $MANIFEST_FILE
-echo "    srv_api_uri: https://api.run.$CF_IP.xip.io" >> $MANIFEST_FILE
-echo "" >> $MANIFEST_FILE
-echo "  nats:" >> $MANIFEST_FILE
-echo "    address: $NAT_ADDRESS" >> $MANIFEST_FILE
-echo "    port: $NAT_PORT" >> $MANIFEST_FILE
-echo "    user: $NAT_USER" >> $MANIFEST_FILE
-echo "    password: $NAT_PASSWD" >> $MANIFEST_FILE
-echo "    authorization_timeout: 5" >> $MANIFEST_FILE
-echo "" >> $MANIFEST_FILE
-echo "  service_plans:" >> $MANIFEST_FILE
-echo "    postgresql:" >> $MANIFEST_FILE
-echo "      default:" >> $MANIFEST_FILE
-echo "        description: \"Developer, 250MB storage, 10 connections\"" >> $MANIFEST_FILE
-echo "        free: true" >> $MANIFEST_FILE
-echo "        job_management:" >> $MANIFEST_FILE
-echo "          high_water: 230" >> $MANIFEST_FILE
-echo "          low_water: 20" >> $MANIFEST_FILE
-echo "        configuration:" >> $MANIFEST_FILE
-echo "          capacity: 125" >> $MANIFEST_FILE
-echo "          max_clients: 10" >> $MANIFEST_FILE
-echo "          quota_files: 4" >> $MANIFEST_FILE
-echo "          quota_data_size: 240" >> $MANIFEST_FILE
-echo "          enable_journaling: true" >> $MANIFEST_FILE
-echo "          backup:" >> $MANIFEST_FILE
-echo "            enable: false" >> $MANIFEST_FILE
-echo "          lifecycle:" >> $MANIFEST_FILE
-echo "            enable: false" >> $MANIFEST_FILE
-echo "            serialization: enable" >> $MANIFEST_FILE
-echo "            snapshot:" >> $MANIFEST_FILE
-echo "              quota: 1" >> $MANIFEST_FILE
-echo "" >> $MANIFEST_FILE
-echo "" >> $MANIFEST_FILE
-echo "  postgresql_gateway:" >> $MANIFEST_FILE
-echo "    token: $TOKEN" >> $MANIFEST_FILE
-echo "    default_plan: default" >> $MANIFEST_FILE
-echo "    supported_versions: [\"9.3\"]" >> $MANIFEST_FILE
-echo "    version_aliases:" >> $MANIFEST_FILE
-echo "      current: \"9.3\"" >> $MANIFEST_FILE
-echo "    cc_api_version: v2" >> $MANIFEST_FILE
-echo "  postgresql_node:" >> $MANIFEST_FILE
+echo "---
+name: cf-services-contrib
+director_uuid: $DIRECTOR_UUID
+
+releases:
+  - name: cf-services-contrib
+    version: 6
+
+compilation:
+  workers: 3
+  network: default
+  reuse_compilation_vms: true
+  cloud_properties:
+    instance_type: m3.medium
+
+update:
+  canaries: 1
+  canary_watch_time: 30000-60000
+  update_watch_time: 30000-60000
+  max_in_flight: 4
+
+networks:
+  - name: floating
+    type: vip
+    cloud_properties: {}
+  - name: default
+    type: dynamic
+    cloud_properties:
+      subnet: $CF_SUBNET1
+      security_groups:
+        - $CF_SG
+
+resource_pools:
+  - name: common
+    network: default
+    size: 2
+    stemcell:
+      name: collector_bosh-aws-xen-ubuntu-trusty-go_agent
+      version: latest
+    cloud_properties:
+      instance_type: m3.medium
+
+jobs:
+  - name: gateways
+    release: cf-services-contrib
+    template:
+    - postgresql_gateway_ng
+    instances: 1
+    resource_pool: common
+    persistent_disk: 10000
+    networks:
+      - name: default
+        default: [dns, gateway]
+    properties:
+      uaa_client_id: \"cf\"
+      uaa_endpoint: https://uaa.run.$CF_IP.xip.io
+      uaa_client_auth_credentials:
+        username: admin
+        password: $CF_ADMIN_PASS
+
+  - name: postgresql_service_node
+    release: cf-services-contrib
+    template: postgresql_node_ng
+    instances: 1
+    resource_pool: common
+    persistent_disk: 10000
+    properties:
+      postgresql_node:
+        plan: default
+    networks:
+      - name: default
+        default: [dns, gateway]
+
+
+properties:
+  networks:
+    apps: default
+    management: default
+
+  cc:
+    srv_api_uri: https://$CF_API
+
+  nats:
+    address: $NAT_ADDRESS
+    port: $NAT_PORT
+    user: $NAT_USER
+    password: $NAT_PASSWD
+    authorization_timeout: 5
+
+  service_plans:
+    postgresql:
+      default:
+        description: \"Developer, 250MB storage, 10 connections\"
+        free: true
+        job_management:
+          high_water: 230
+          low_water: 20
+        configuration:
+          capacity: 125
+          max_clients: 10
+          quota_files: 4
+          quota_data_size: 240
+          enable_journaling: true
+          backup:
+            enable: false
+          lifecycle:
+            enable: false
+            serialization: enable
+            snapshot:
+              quota: 1
+
+
+  postgresql_gateway:
+    token: $TOKEN
+    default_plan: default
+    supported_versions: [\"9.3\"]
+    version_aliases:
+      current: \"9.3\"
+    cc_api_version: v2
+  postgresql_node:
+    supported_versions: [\"9.3\"]
+    default_version: \"9.3\"
+    max_tmp: 900
+    password: $TOKEN
+" > $MANIFEST_FILE    
 
 bosh deployment $MANIFEST_FILE
 bosh -n deploy
@@ -502,16 +507,40 @@ test -d ~/.sync || ~/.local/bin/virtualenv-3.4 ~/.sync
     $HOME/workspace/deployments/terraform-aws-cf-install/scripts/af_bosh_sync.py
 )
 
-cf login --skip-ssl-validation -a $CF_API -u admin -p $CF_ADMIN_PASS
-cf create-space me
-cf target -s me
+
+
+cf=/home/ubuntu/bin/traveling-cf-admin/cf
+
+$cf login --skip-ssl-validation -a $CF_API -u admin -p $CF_ADMIN_PASS
+$cf create-space me
+$cf target -s me
+
+
+# https://groups.google.com/a/cloudfoundry.org/forum/m/#!topic/bosh-users/b7ALPhxcQ2A
+$cf security-groups | awk '{ print $2 }' | grep -q -v database_service && \
+    echo "[{\"protocol\":\"all\",\"destination\":\"$(bosh vms | grep postgresql_service_node/0 | cut -d '|' -f 5 | tr -d ' ')\"}]" > database_service_group.txt &&
+    $cf create-security-group database_service database_service_group.txt && \
+    $cf bind-security-group database_service system me && \
+    $cf bind-running-security-group database_service
+    $cf bind-staging-security-group database_service
+
+$cf service-auth-tokens | awk '{ print $1 }' | grep -q -v postgresql && \
+    $cf create-service-auth-token postgresql core $TOKEN
+$cf services | awk '{ print $1 }' | grep -q -v request-logger-db && \
+    $cf create-service postgresql default request-logger-db
 
 pushd $HOME/workspace/deployments
 
-git clone https://github.com/elventear/cf-pyapp.git
-cd cf-pyapp/src
-cf push
+if [ ! -d cf-pyapp ]; then 
+  git clone https://github.com/elventear/cf-pyapp.git
+fi
+
+cd cf-pyapp/src && git pull
+$cf push
 popd
+
+$cf bind-service request-logger request-logger-db
+$cf restage request-logger
 
 echo "Provision script completed..."
 exit 0
