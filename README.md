@@ -87,7 +87,7 @@ After Initial Install
 
 At the end of the output of the terraform run, there will be a section called `Outputs` that will have at least `bastion_ip` and an IP address. If not, or if you cleared the terminal without noting it, you can log into the AWS console and look for an instance called 'bastion', with the `bastion` security group. Use the public IP associated with that instance, and ssh in as the ubuntu user, using the ssh key listed as `aws_key_path` in your configuration (if you used the Unattended Install).
 
-In the bastion server you can find `$HOME/provision.log`, which contains a full dump of the entire provision process. At the end of the log, if the provision was successful you will find the URL a demo web application deployed on Cloud Foundry. You can point your browser at that URL to exercise the app.
+In the bastion server you can find `$HOME/provision.log`, which contains a full dump of the entire provision process. At the end of the log, if the provision was successful, you will find the URL of a demo web application deployed on Cloud Foundry. You can point your browser at that URL to exercise the app.
 
 ```
 ssh -i ~/.ssh/example.pem ubuntu@$(terraform output bastion_ip)
