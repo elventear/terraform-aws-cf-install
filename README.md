@@ -1,7 +1,7 @@
 terraform-aws-cf-install [![Build Status](https://travis-ci.org/cloudfoundry-community/terraform-aws-cf-install.svg?branch=master)](https://travis-ci.org/cloudfoundry-community/terraform-aws-cf-install)
 ========================
 
-This is part of a project that aims to create a one click deploy of Cloud Foundry into an AWS VPC. This is (probably) the repo you want to use.
+This is part of a project that aims to create a one click deploy of Cloud Foundry into an AWS VPC, with monitoring provided by [AppFirst](http://www.appfirst.com). This is (probably) the repo you want to use.
 
 Architecture
 ------------
@@ -87,6 +87,8 @@ After Initial Install
 
 At the end of the output of the terraform run, there will be a section called `Outputs` that will have at least `bastion_ip` and an IP address. If not, or if you cleared the terminal without noting it, you can log into the AWS console and look for an instance called 'bastion', with the `bastion` security group. Use the public IP associated with that instance, and ssh in as the ubuntu user, using the ssh key listed as `aws_key_path` in your configuration (if you used the Unattended Install).
 
+In the bastion server you can find `$HOME/provision.log`, which contains a full dump of the entire provision process. At the end of the log, if the provision was successful you will find the URL a demo web application deployed on Cloud Foundry. You can point your browser at that URL to exercise the app.
+
 ```
 ssh -i ~/.ssh/example.pem ubuntu@$(terraform output bastion_ip)
 ```
@@ -139,6 +141,9 @@ aws_secret_key = "${var.aws_secret_key}" # Provided by Amazon
 aws_key_name = "${var.aws_key_name}" # The "name" of the ssh key to use in the AWS Console under EC2 -> Network & Security -> Key Pairs
 aws_key_path = "${var.aws_key_path}" # Literal path to pem file on the computer running Terraform - /home/user/keys/exapmle.pem
 network = "${var.network}" # The first two octects to use within the VPC, e.g. 10.0 or 10.55
+appfirst_tenant_id = "${var.appfirst_tenant_id}" # The tenant ID that is associated with your AppFirst account
+appfirst_user_id = "${var.appfirst_user_id}" # The user ID that you use to login to your AppFirst account
+appfirst_user_key = "${var.appfirst_user_key}" # AppFirst API key
 ```
 
 ### Example usage
