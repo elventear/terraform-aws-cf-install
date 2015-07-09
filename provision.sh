@@ -176,14 +176,14 @@ fi
 popd
 
 if [[ ! -d "$HOME/workspace/deployments/terraform-aws-cf-install" ]]; then
-  git clone --branch ${CF_BOSHWORKSPACE_VERSION} https://github.com/elventear/terraform-aws-cf-install.git 
+  git clone --branch ${CF_BOSHWORKSPACE_VERSION} https://github.com/appfirst/terraform-aws-cf-install.git 
 fi
 
 # There is a specific branch of cf-boshworkspace that we use for terraform. This
 # may change in the future if we come up with a better way to handle maintaining
 # configs in a git repo
 if [[ ! -d "$HOME/workspace/deployments/cf-boshworkspace" ]]; then
-  git clone --branch  ${CF_BOSHWORKSPACE_VERSION} http://github.com/elventear/cf-boshworkspace
+  git clone --branch  ${CF_BOSHWORKSPACE_VERSION} http://github.com/appfirst/cf-boshworkspace
 fi
 pushd cf-boshworkspace
 mkdir -p ssh
@@ -532,7 +532,7 @@ $cf services | awk '{ print $1 }' | grep -q -v request-logger-db && \
 pushd $HOME/workspace/deployments
 
 if [ ! -d cf-pyapp ]; then 
-  git clone https://github.com/elventear/cf-pyapp.git
+  git clone https://github.com/appfirst/cf-pyapp.git
 fi
 
 cd cf-pyapp/src && git pull
