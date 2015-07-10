@@ -496,6 +496,7 @@ BOSH_USER: admin
 BOSH_PASS: admin
 AF_USER: $APPFIRST_USER_ID
 AF_API_KEY: $APPFIRST_USER_KEY
+AF_API_ROOT: https://${APPFIRST_FRONTEND_URL}/api
 " > ~/.af_sync.yml
 
 pip3 install --user virtualenv

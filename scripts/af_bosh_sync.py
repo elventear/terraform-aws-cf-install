@@ -14,8 +14,6 @@ class RequestError(Exception): pass
 
 CONF = os.path.join(os.path.expanduser("~"), '.af_sync.yml') 
 
-AF_API_ROOT = 'https://wwws.appfirst.com/api'
-
 def api_url(root, *s):
     url = '{0}/{1}'.format(root, '/'.join(s))
     return url
@@ -82,15 +80,17 @@ def read_env():
     global BOSH_PASS
     global AF_USER
     global AF_API_KEY
+    global AF_API_ROOT
 
     env = yaml.load(open(CONF).read())
 
     try:
-        BOSH_URL   = env['BOSH_URL']
-        BOSH_USER  = env['BOSH_USER']
-        BOSH_PASS  = env['BOSH_PASS']
-        AF_USER    = env['AF_USER']
-        AF_API_KEY = env['AF_API_KEY']
+        BOSH_URL    = env['BOSH_URL']
+        BOSH_USER   = env['BOSH_USER']
+        BOSH_PASS   = env['BOSH_PASS']
+        AF_USER     = env['AF_USER']
+        AF_API_KEY  = env['AF_API_KEY']
+        AF_API_ROOT = env['AF_API_ROOT']
     except KeyError as e:
         print("Error: missing enviroment variable '%s'" % e.args)
         sys.exit(1)
