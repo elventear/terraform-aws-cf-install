@@ -178,6 +178,11 @@ popd
 if [[ ! -d "$HOME/workspace/deployments/terraform-aws-cf-install" ]]; then
   git clone --branch ${CF_BOSHWORKSPACE_VERSION} https://github.com/appfirst/terraform-aws-cf-install.git 
 fi
+pushd terraform-aws-cf-install
+git reset --hard origin/${CF_BOSHWORKSPACE_VERSION}
+git pull
+
+popd
 
 # There is a specific branch of cf-boshworkspace that we use for terraform. This
 # may change in the future if we come up with a better way to handle maintaining
@@ -187,7 +192,7 @@ if [[ ! -d "$HOME/workspace/deployments/cf-boshworkspace" ]]; then
 fi
 pushd cf-boshworkspace
 
-git reset --hard origin/{CF_BOSHWORKSPACE_VERSION}
+git reset --hard origin/${CF_BOSHWORKSPACE_VERSION}
 git pull
 
 mkdir -p ssh
@@ -529,9 +534,9 @@ $cf security-groups | awk '{ print $2 }' | grep -q -v database_service && \
     $cf bind-running-security-group database_service
     $cf bind-staging-security-group database_service
 
-$cf service-auth-tokens | awk '{ print $1 }' | grep -q -v postgresql && \
+$cf service-auth-tokens | awk '{ print $1 }' | grep -q postgresql || \
     $cf create-service-auth-token postgresql core $TOKEN
-$cf services | awk '{ print $1 }' | grep -q -v request-logger-db && \
+$cf services | awk '{ print $1 }' | grep -q request-logger-db || \
     $cf create-service postgresql default request-logger-db
 
 pushd $HOME/workspace/deployments
@@ -541,6 +546,8 @@ if [ ! -d cf-pyapp ]; then
 fi
 
 cd cf-pyapp/src && git pull
+echo $APPFIRST_TENANT_ID > tid.conf
+echo $APPFIRST_FRONTEND_URL > feurl.conf
 $cf push
 popd
 
