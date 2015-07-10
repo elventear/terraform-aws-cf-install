@@ -186,6 +186,9 @@ if [[ ! -d "$HOME/workspace/deployments/cf-boshworkspace" ]]; then
   git clone --branch  ${CF_BOSHWORKSPACE_VERSION} http://github.com/appfirst/cf-boshworkspace
 fi
 pushd cf-boshworkspace
+
+git reset --hard origin/{CF_BOSHWORKSPACE_VERSION}
+
 mkdir -p ssh
 gem install bundler
 bundle install
