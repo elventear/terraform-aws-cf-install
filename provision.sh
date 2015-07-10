@@ -188,6 +188,7 @@ fi
 pushd cf-boshworkspace
 
 git reset --hard origin/{CF_BOSHWORKSPACE_VERSION}
+git pull
 
 mkdir -p ssh
 gem install bundler
